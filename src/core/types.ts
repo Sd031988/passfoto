@@ -59,7 +59,7 @@ export interface Preset {
   label: string
   /** Kurzlabel für en-US. */
   labelEn: string
-  group: 'eu' | 'americas' | 'asia-pacific' | 'other'
+  group: 'eu' | 'mena-africa' | 'americas' | 'asia-pacific' | 'other'
   /** ISO-3166 alpha-2, oder `EU` / `SCHENGEN` / `XA`. */
   region: string
   widthMm: number
@@ -140,6 +140,8 @@ export interface PhotoMetrics {
   facesDetected: number
   /** Scheitel liegt im Bild (nicht abgeschnitten). */
   crownInsideFrame: boolean
+  /** Der Passbild-Ausschnitt ragt über das Quellbild hinaus (zu nah an der Kamera). */
+  cropOutOfFrame: boolean
   /** Schärfe: Varianz des Laplace-Operators im Gesichtsausschnitt. */
   sharpness: number
   /** Mittlere Helligkeit des Gesichts (0..1). */

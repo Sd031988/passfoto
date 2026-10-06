@@ -6,7 +6,7 @@ export const UK_PRESET: Preset = {
   id: 'uk-passport',
   label: 'Vereinigtes Königreich – Reisepass (35 × 45 mm)',
   labelEn: 'United Kingdom – passport (35 × 45 mm)',
-  group: 'other',
+  group: 'eu',
   region: 'GB',
   widthMm: 35,
   heightMm: 45,

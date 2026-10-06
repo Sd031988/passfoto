@@ -2,8 +2,22 @@ import type { Preset, PresetRegistry } from '../types'
 import { EU_PRESETS } from './eu'
 import { US_PRESET, US_VISA_PRESET, CANADA_PRESET, BRAZIL_PRESET } from './americas'
 import { UK_PRESET, AUSTRALIA_PRESET, INDIA_PRESET, CHINA_PRESET, JAPAN_PRESET } from './world'
+import { MORE_PRESETS } from './more'
 
-export const PRESETS: Preset[] = [
+const GROUP_ORDER: Preset['group'][] = ['eu', 'mena-africa', 'asia-pacific', 'americas', 'other']
+const PINNED = ['de-personalausweis', 'eu-schengen-visum']
+
+function ordered(list: Preset[]): Preset[] {
+  return [...list].sort((a, b) => {
+    const g = GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group)
+    if (g !== 0) return g
+    const pa = PINNED.indexOf(a.id), pb = PINNED.indexOf(b.id)
+    if (pa !== -1 || pb !== -1) return (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb)
+    return a.label.localeCompare(b.label, 'de')
+  })
+}
+
+export const PRESETS: Preset[] = ordered([
   ...EU_PRESETS,
   US_PRESET,
   US_VISA_PRESET,
@@ -14,7 +28,8 @@ export const PRESETS: Preset[] = [
   CHINA_PRESET,
   BRAZIL_PRESET,
   JAPAN_PRESET,
-]
+  ...MORE_PRESETS,
+])
 
 export const REGISTRY: PresetRegistry = {
   presets: PRESETS,
@@ -29,6 +44,7 @@ export function getPreset(id: string): Preset {
 
 export const GROUP_LABELS: Record<Preset['group'], string> = {
   eu: 'Europa / Schengen',
+  'mena-africa': 'Türkei, Naher Osten & Afrika',
   americas: 'Amerika',
   'asia-pacific': 'Asien & Pazifik',
   other: 'Weitere',

@@ -14,7 +14,7 @@ import {
 import type { CheckResult, PhotoMetrics } from './core/types'
 import { mmToPx } from './core/units'
 import { analyzePixels, scaleOutputGeometry, type PixelMetrics } from './imaging/analyze'
-import { copyToClipboard, downloadBytes, encodeJpeg } from './imaging/jpeg'
+import { copyToClipboard, downloadBytes, encodeJpeg, encodePng } from './imaging/jpeg'
 import { buildPrintSheet, PAPERS, planPrintLayout, type PaperId } from './imaging/printSheet'
 import { getImageData, renderCrop } from './imaging/render'
 import { faceEngine, type FaceObservation } from './vision/faceEngine'
@@ -52,7 +52,7 @@ function newAdjustment(): CropAdjustment {
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('de')
-  // Deep-Link ?preset=us-passport wird direkt in den Ausgangszustand Ã¼bernommen.
+  // Deep-Link ?preset=us-passport wird direkt in den Ausgangszustand übernommen.
   const [initialPresetId] = useState(() => {
     const requested = new URLSearchParams(window.location.search).get('preset')
     return requested && REGISTRY.byId[requested] ? requested : 'de-personalausweis'
@@ -145,7 +145,7 @@ export default function App() {
     [preset, adjustment, basis, videoRef],
   )
 
-  /** Aus dem eingefrorenen Bild Ergebnis, PrÃ¼fung und Vorschau erzeugen. */
+  /** Aus dem eingefrorenen Bild Ergebnis, Prüfung und Vorschau erzeugen. */
   const processCapture = useCallback(
     async (source: Capture, qualityOverride?: number) => {
       setBusy(true)
@@ -183,7 +183,7 @@ export default function App() {
   useEffect(() => {
     if (!capture) return
     // Das Ergebnis wird im Effekt erzeugt, damit der Klick-Handler nicht
-    // blockiert; die Aufnahme selbst lÃ¶st die Verarbeitung aus.
+    // blockiert; die Aufnahme selbst löst die Verarbeitung aus.
     const run = requestAnimationFrame(() => void processCapture(capture))
     return () => cancelAnimationFrame(run)
   }, [capture, processCapture])
@@ -203,7 +203,7 @@ export default function App() {
     image.src = result.previewUrl
   }, [result])
 
-  // Beim Wechsel des Presets Einstellungen und Druckblatt zurÃ¼cksetzen.
+  // Beim Wechsel des Presets Einstellungen und Druckblatt zurücksetzen.
   const presetIdRef = useRef(preset.id)
   useEffect(() => {
     if (presetIdRef.current === preset.id) return
@@ -329,6 +329,18 @@ export default function App() {
     downloadBytes(result.jpeg, exportFilename(preset), 'image/jpeg')
   }, [result, preset])
 
+  const handleDownloadPng = useCallback(async () => {
+    if (!capture || !result) return
+    setBusy(true)
+    try {
+      const canvas = renderCrop(capture.frame, buildPlan(preset, capture.observation, adjustment, basis))
+      const png = await encodePng(canvas, preset.dpi)
+      downloadBytes(png, exportFilename(preset).replace(/\.jpg$/, '.png'), 'image/png')
+    } finally {
+      setBusy(false)
+    }
+  }, [capture, result, preset, adjustment, basis])
+
   const handleCopy = useCallback(async () => {
     if (!result) return
     const ok = await copyToClipboard(new Blob([result.jpeg as BlobPart], { type: 'image/jpeg' }))
@@ -351,7 +363,7 @@ export default function App() {
     setBusy(true)
     try {
       const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
-      for (const target of PRESETS) {
+      for (const target of PRESETS.filter((candidate) => candidate.group === preset.group)) {
         const canvas = renderCrop(capture.frame, buildPlan(target, capture.observation, adjustment, basis))
         const jpeg = await encodeJpeg(canvas, target.dpi, target.digital.quality)
         downloadBytes(jpeg, exportFilename(target), 'image/jpeg')
@@ -442,7 +454,7 @@ export default function App() {
             <div className="flex flex-wrap items-baseline justify-between gap-2 pb-2">
               <h2 className="text-sm font-semibold text-slate-100">{preset.label}</h2>
               <span className="text-xs text-slate-400">
-                {GROUP_LABELS[preset.group]} Â· {t('preset.verifiedAt')} {preset.verifiedAt}
+                {GROUP_LABELS[preset.group]} · {t('preset.verifiedAt')} {preset.verifiedAt}
               </span>
             </div>
 
@@ -450,13 +462,13 @@ export default function App() {
               <div className="rounded-lg bg-ink-800/60 p-2">
                 <dt className="text-slate-400">{t('preset.size')}</dt>
                 <dd className="font-semibold text-slate-100">
-                  {formatInteger(preset.widthMm, language)} Ã— {formatInteger(preset.heightMm, language)} mm
+                  {formatInteger(preset.widthMm, language)} × {formatInteger(preset.heightMm, language)} mm
                 </dd>
               </div>
               <div className="rounded-lg bg-ink-800/60 p-2">
                 <dt className="text-slate-400">{t('preset.head')}</dt>
                 <dd className="font-semibold text-slate-100">
-                  {preset.head.minMm}â€“{preset.head.maxMm} mm
+                  {preset.head.minMm}–{preset.head.maxMm} mm
                 </dd>
               </div>
               <div className="rounded-lg bg-ink-800/60 p-2">
@@ -496,7 +508,7 @@ export default function App() {
               >
                 {preset.source.label}
               </a>{' '}
-              Â· {preset.confidence === 'offiziell' ? t('preset.confidence.offiziell') : t('preset.confidence.praxis')}
+              · {preset.confidence === 'offiziell' ? t('preset.confidence.offiziell') : t('preset.confidence.praxis')}
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-ink-600/30 pt-3 text-xs">
@@ -661,7 +673,7 @@ export default function App() {
                     >
                       {livePlan.headHeightMm.toFixed(1)} mm
                     </span>{' '}
-                    / {preset.head.minMm}â€“{preset.head.maxMm} mm
+                    / {preset.head.minMm}–{preset.head.maxMm} mm
                   </p>
                 )}
 
@@ -684,7 +696,7 @@ export default function App() {
                       <span className="flex justify-between text-slate-300">
                         <span>{t('adjust.head')}</span>
                         <span>
-                          {target.headHeightMm.toFixed(1)} mm Â· {t('adjust.target')} {preset.head.minMm}â€“
+                          {target.headHeightMm.toFixed(1)} mm · {t('adjust.target')} {preset.head.minMm}–
                           {preset.head.maxMm}
                         </span>
                       </span>
@@ -700,7 +712,7 @@ export default function App() {
                         className="w-full"
                       />
                       <span className="text-[10px] text-slate-500">
-                        {headPxMin}â€“{headPxMax} px bei {preset.dpi} dpi
+                        {headPxMin}–{headPxMax} px bei {preset.dpi} dpi
                       </span>
                     </label>
 
@@ -766,8 +778,8 @@ export default function App() {
                     className="max-h-[420px] rounded-lg border border-ink-600/40 bg-black/40 object-contain"
                   />
                   <div className="text-center text-xs text-slate-400">
-                    {formatInteger(result.metrics.outputWidthPx, language)} Ã—{' '}
-                    {formatInteger(result.metrics.outputHeightPx, language)} px Â· {preset.dpi} dpi
+                    {formatInteger(result.metrics.outputWidthPx, language)} ×{' '}
+                    {formatInteger(result.metrics.outputHeightPx, language)} px · {preset.dpi} dpi
                   </div>
                 </div>
                 <div className="flex-1 space-y-3">
@@ -802,6 +814,7 @@ export default function App() {
               }}
               onSheetChange={setSheet}
               onDownloadPhoto={handleDownloadPhoto}
+              onDownloadPng={handleDownloadPng}
               onDownloadSheet={handleDownloadSheet}
               onCopyClipboard={() => void handleCopy()}
               onBatchExport={() => void handleBatchExport()}

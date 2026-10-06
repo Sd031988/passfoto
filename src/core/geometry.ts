@@ -97,8 +97,10 @@ export function planCrop(
   const cropOutOfFrame =
     sx < -0.5 || sy < -0.5 || sx + sw > source.width + 0.5 || sy + sh > source.height + 0.5
 
-  const clampedSx = clamp(sx, 0, Math.max(0, source.width - sw))
-  const clampedSy = clamp(sy, 0, Math.max(0, source.height - sh))
+  // Ist der Ausschnitt größer als das Quellbild (Kopf zu nah), bleibt er unverändert
+  // stehen. Das Festklemmen auf 0 würde ihn sonst beim Zeichnen stauchen.
+  const clampedSx = sw <= source.width ? clamp(sx, 0, source.width - sw) : sx
+  const clampedSy = sh <= source.height ? clamp(sy, 0, source.height - sh) : sy
 
   const qualityLimited = Math.abs(clampedSx - sx) > 0.5 || Math.abs(clampedSy - sy) > 0.5
 

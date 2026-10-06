@@ -108,6 +108,7 @@ export function computeMetrics({
     smile: observation.smile,
     facesDetected: observation.facesDetected,
     crownInsideFrame: topMarginMm >= 0.2,
+    cropOutOfFrame: plan.cropOutOfFrame,
     outputWidthPx: plan.outWidthPx,
     outputHeightPx: plan.outHeightPx,
     outputBytes,

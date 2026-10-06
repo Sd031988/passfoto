@@ -21,6 +21,7 @@ function metrics(overrides: Partial<PhotoMetrics> = {}): PhotoMetrics {
     smile: 0.01,
     facesDetected: 1,
     crownInsideFrame: true,
+    cropOutOfFrame: false,
     sharpness: 0.62,
     faceLuminance: 0.55,
     faceHighlightClip: 0.001,

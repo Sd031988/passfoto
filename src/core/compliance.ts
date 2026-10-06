@@ -86,6 +86,17 @@ export function evaluateCompliance({ preset, metrics }: ComplianceInput): CheckR
   })
 
   checks.push({
+    id: 'frame',
+    category: 'masse',
+    labelKey: 'check.frame',
+    status: metrics.cropOutOfFrame ? 'fail' : 'pass',
+    measured: metrics.cropOutOfFrame ? 'ragt über den Bildrand' : 'vollständig im Bild',
+    target: 'vollständig im Bild',
+    value: metrics.cropOutOfFrame ? 1 : 0,
+    hintKey: metrics.cropOutOfFrame ? 'hint.frame' : undefined,
+  })
+
+  checks.push({
     id: 'photoSize',
     category: 'masse',
     labelKey: 'check.photoSize',

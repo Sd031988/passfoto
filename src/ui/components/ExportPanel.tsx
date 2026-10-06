@@ -24,6 +24,7 @@ interface ExportPanelProps {
   onQualityChange: (quality: number) => void
   onSheetChange: (sheet: SheetOptions) => void
   onDownloadPhoto: () => void
+  onDownloadPng: () => void
   onDownloadSheet: () => void
   onCopyClipboard: () => void
   onBatchExport: () => void
@@ -42,6 +43,7 @@ export function ExportPanel({
   onQualityChange,
   onSheetChange,
   onDownloadPhoto,
+  onDownloadPng,
   onDownloadSheet,
   onCopyClipboard,
   onBatchExport,
@@ -92,6 +94,14 @@ export function ExportPanel({
             className="rounded-lg bg-mint-500 px-3 py-2 text-sm font-semibold text-ink-950 disabled:opacity-40"
           >
             {t('export.downloadPhoto')}
+          </button>
+          <button
+            type="button"
+            onClick={onDownloadPng}
+            disabled={busy || blocking}
+            className="rounded-lg border border-ink-600/60 px-3 py-2 text-sm disabled:opacity-40"
+          >
+            {t('export.downloadPng')}
           </button>
           <button
             type="button"

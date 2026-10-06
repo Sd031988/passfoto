@@ -30,12 +30,30 @@ export function renderCrop(
   context.imageSmoothingEnabled = true
   context.imageSmoothingQuality = 'high'
 
-  const sourceWidth = sourceSize(source).width
-  const downscale = plan.sw / plan.outWidthPx
+  // Nur der Teil des Ausschnitts, der wirklich im Quellbild liegt, wird gezeichnet –
+  // an seiner maßstabsgetreuen Stelle. Fehlende Bereiche bleiben weiß statt das
+  // Bild zu stauchen oder zu strecken.
+  const { width: srcW, height: srcH } = sourceSize(source)
+  const kx = target.width / plan.sw
+  const ky = target.height / plan.sh
+  const x0 = Math.max(0, plan.sx)
+  const y0 = Math.max(0, plan.sy)
+  const x1 = Math.min(srcW, plan.sx + plan.sw)
+  const y1 = Math.min(srcH, plan.sy + plan.sh)
+  if (x0 > plan.sx + 0.5 || y0 > plan.sy + 0.5 || x1 < plan.sx + plan.sw - 0.5 || y1 < plan.sy + plan.sh - 0.5) {
+    context.fillStyle = '#ffffff'
+    context.fillRect(0, 0, target.width, target.height)
+  }
+  if (x1 <= x0 || y1 <= y0) return target
+  const dx = (x0 - plan.sx) * kx
+  const dy = (y0 - plan.sy) * ky
+  const dw = (x1 - x0) * kx
+  const dh = (y1 - y0) * ky
 
+  const downscale = plan.sw / plan.outWidthPx
   if (downscale > 4) {
-    const intermediateWidth = Math.max(plan.outWidthPx, Math.round(plan.sw / 2))
-    const intermediateHeight = Math.max(plan.outHeightPx, Math.round(plan.sh / 2))
+    const intermediateWidth = Math.max(1, Math.round(Math.max(dw, (x1 - x0) / 2)))
+    const intermediateHeight = Math.max(1, Math.round(Math.max(dh, (y1 - y0) / 2)))
     const intermediate = document.createElement('canvas')
     intermediate.width = intermediateWidth
     intermediate.height = intermediateHeight
@@ -43,15 +61,13 @@ export function renderCrop(
     if (mid) {
       mid.imageSmoothingEnabled = true
       mid.imageSmoothingQuality = 'high'
-      mid.drawImage(source, plan.sx, plan.sy, plan.sw, plan.sh, 0, 0, intermediateWidth, intermediateHeight)
-      context.drawImage(intermediate, 0, 0, intermediateWidth, intermediateHeight, 0, 0, target.width, target.height)
+      mid.drawImage(source, x0, y0, x1 - x0, y1 - y0, 0, 0, intermediateWidth, intermediateHeight)
+      context.drawImage(intermediate, 0, 0, intermediateWidth, intermediateHeight, dx, dy, dw, dh)
       return target
     }
   }
 
-  const sw = Math.min(plan.sw, Math.max(0, sourceWidth - plan.sx))
-  const sh = Math.min(plan.sh, Math.max(0, sourceSize(source).height - plan.sy))
-  context.drawImage(source, plan.sx, plan.sy, sw, sh, 0, 0, target.width, target.height)
+  context.drawImage(source, x0, y0, x1 - x0, y1 - y0, dx, dy, dw, dh)
   return target
 }
 

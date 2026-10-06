@@ -7,15 +7,14 @@ ersten Laden offline.
 
 ## Was die App kann
 
-- 19 Presets für Deutschland/EU, USA, UK, Kanada, Brasilien, Australien,
-  Indien, China und Japan.
+- 62 Presets für Europa, Türkei, Naher Osten, Afrika, Asien und Amerika
 - Aufnahme über Kamera oder Upload eines vorhandenen Fotos.
 - Gesichtserkennung, Pose- und Blinkmessung, Hintergrund- und
   Beleuchtungsanalyse.
 - Automatischer Zuschnitt auf das Zielformat mit manueller Korrektur von
   Kopfhöhe, Position und Zoom.
 - Prüfung aller typischen Ablehnungsgründe mit Klartext-Hinweisen.
-- Export als JPEG mit korrekter DPI-Angabe, als PDF-Druckbogen mit
+- Export als JPEG oder PNG mit korrekter DPI-Angabe, als PDF-Druckbogen mit
   Schnittmarken oder als mehrere Fotos in einem Dokument.
 
 ## Wichtiger Hinweis zur Nutzung in Deutschland
@@ -77,6 +76,9 @@ der daraus erzeugte, von GitHub Pages ausgelieferte Stand direkt unter
 `../DEPLOYMENT.md`.
 
 ## Presets und Quellen
+
+Hinweis: Die Funktion „Foto bearbeiten“ (Hintergrund ersetzen, Licht, Farbe, Schärfe) ist bisher nur in der ausgelieferten Fassung im SDApp-Repository enthalten; ihr Quellcode liegt noch nicht in diesem Repository und muss vom lokalen Rechner nachgetragen werden.
+
 
 Jedes Preset trägt Quelle, Prüfdatum und eine Einordnung als `offiziell` oder
 `praxis`. Angaben mit `praxis` beruhen auf Erfahrungswerten und sollten vor
