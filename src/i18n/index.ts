@@ -9,7 +9,10 @@ const de = {
   'step.export': 'Export',
 
   'preset.select': 'Dokument auswählen',
-  'preset.search': 'Land, Dokument oder Format suchen …',
+  'preset.country': 'Land',
+  'preset.documents': 'Dokumente',
+  'preset.searchResults': 'Suchergebnisse',
+  'preset.search': 'Suchen, z. B. Visum oder 35x45',
   'preset.noResults': 'Kein Treffer. Suche nach Land oder Format (z. B. 35x45).',
   'preset.size': 'Format',
   'preset.head': 'Gesichtshöhe',
@@ -197,7 +200,10 @@ const en: Record<TranslationKey, string> = {
   'step.export': 'Export',
 
   'preset.select': 'Choose document',
-  'preset.search': 'Search country, document or size …',
+  'preset.country': 'Country',
+  'preset.documents': 'Documents',
+  'preset.searchResults': 'Search results',
+  'preset.search': 'Search, e.g. visa or 35x45',
   'preset.noResults': 'No match. Try a country or size (e.g. 35x45).',
   'preset.size': 'Size',
   'preset.head': 'Head height',

@@ -55,7 +55,9 @@ export function drawOverlay(context: CanvasRenderingContext2D, options: OverlayO
   const sourceTopY = crownY - plan.topMarginMm * pxPerMm * plan.zoom
   const sourceHeadEndY = sourceTopY + plan.headHeightMm * pxPerMm * plan.zoom
 
-  const cropX = toX(plan.sx + plan.sw)
+  // Linke Kante des Ausschnitts auf dem Bildschirm: gespiegelt (Frontkamera) ist das
+  // die rechte Kante im Quellbild, ungespiegelt (Rückkamera) die linke.
+  const cropX = mirrored ? toX(plan.sx + plan.sw) : toX(plan.sx)
   const cropY = toY(plan.sy)
   const cropW = plan.sw * scale
   const cropH = plan.sh * scale

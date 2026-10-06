@@ -16,6 +16,49 @@ export interface UseCameraResult extends CameraState {
   switchCamera: () => void
 }
 
+const RESOLUTION = { width: { ideal: 2560 }, height: { ideal: 1920 } }
+const BACK_LABEL = /back|rear|environment|rück|hinten|arrière|trasera|posteriore/i
+const FRONT_LABEL = /front|user|facetime|vorder|selfie/i
+
+function actualFacing(stream: MediaStream): string | undefined {
+  const track = stream.getVideoTracks()[0]
+  const settings = track?.getSettings?.() as MediaTrackSettings | undefined
+  return settings?.facingMode
+}
+
+/**
+ * Öffnet die gewünschte Kamera. `facingMode` allein ist nur ein Wunsch und wird
+ * von manchen Browsern ignoriert; deshalb zuerst `exact`, dann Auswahl über den
+ * Gerätenamen und zuletzt eine Anfrage ohne Auflösungsvorgabe.
+ */
+async function openCamera(mode: 'user' | 'environment'): Promise<MediaStream> {
+  const attempts: MediaTrackConstraints[] = [
+    { facingMode: { exact: mode }, ...RESOLUTION },
+    { facingMode: { exact: mode } },
+  ]
+  for (const video of attempts) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ video, audio: false })
+    } catch (error) {
+      const name = error instanceof DOMException ? error.name : ''
+      if (name === 'NotAllowedError' || name === 'SecurityError') throw error
+    }
+  }
+  const fallback = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode, ...RESOLUTION }, audio: false })
+  const facing = actualFacing(fallback)
+  if (facing === mode) return fallback
+  const devices = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === 'videoinput')
+  const wanted = devices.find((device) => (mode === 'environment' ? BACK_LABEL : FRONT_LABEL).test(device.label))
+  const current = fallback.getVideoTracks()[0]?.getSettings?.().deviceId
+  if (!wanted || wanted.deviceId === current) return fallback
+  fallback.getTracks().forEach((track) => track.stop())
+  try {
+    return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: wanted.deviceId }, ...RESOLUTION }, audio: false })
+  } catch {
+    return navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: false })
+  }
+}
+
 export function useCamera(): UseCameraResult {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -41,16 +84,13 @@ export function useCamera(): UseCameraResult {
       }
       setStatus('starting')
       setErrorMessage(undefined)
+      // Laufende Kamera zuerst freigeben: viele Handys erlauben nur eine
+      // geöffnete Kamera – sonst schlägt der Wechsel auf die Rückkamera fehl.
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+      if (videoRef.current) videoRef.current.srcObject = null
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: mode,
-            width: { ideal: 2560 },
-            height: { ideal: 1920 },
-          },
-          audio: false,
-        })
-        streamRef.current?.getTracks().forEach((track) => track.stop())
+        const stream = await openCamera(mode)
         streamRef.current = stream
         const video = videoRef.current
         if (video) {
@@ -59,7 +99,8 @@ export function useCamera(): UseCameraResult {
         }
         const devices = await navigator.mediaDevices.enumerateDevices()
         setHasMultipleCameras(devices.filter((device) => device.kind === 'videoinput').length > 1)
-        setFacingMode(mode)
+        const facing = actualFacing(stream)
+        setFacingMode(facing === 'user' || facing === 'environment' ? facing : mode)
         setStatus('running')
       } catch (error) {
         const name = error instanceof DOMException ? error.name : ''
